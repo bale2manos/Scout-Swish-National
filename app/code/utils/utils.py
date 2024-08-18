@@ -2,6 +2,8 @@ import os
 import shutil
 
 
+
+
 def remove_initial_wrong_chars(text):
     chars_mistaken = ['O', '9']
     for char in chars_mistaken:
@@ -90,3 +92,10 @@ def clean_text_and_remove_excess(text):
     lines = [line for line in lines if line]
 
     return lines
+
+def remove_temp_images(folder_path):
+    # Look inside the folder and subfolders for files starting with 'temp'
+    for root, dirs, files in os.walk(folder_path):
+        for file in files:
+            if file.startswith('temp') or file.startswith('Teams'):
+                os.remove(os.path.join(root, file))

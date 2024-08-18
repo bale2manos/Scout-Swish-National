@@ -3,14 +3,18 @@ import time
 import win32gui
 import win32con
 import pygetwindow as gw  # Assuming you have pygetwindow installed
+import os
 
+from utils.validator import filter_stats
 from ..media.cropping import crop_team_names
 from ..media.preprocess_image import preprocess_image_adding_rectangles
-from ..media.image_to_text import get_team_names
-from .move_mouse import move_mouse_to_game, click_back_button, slide_next_player, point_last_player, drag_to_team_stats, \
-    drag_to_next_stats
+from ..media.image_to_text import get_team_names, get_players_names, get_team_stats, get_players_numbers
+from .move_mouse import move_mouse_to_game, click_back_button, drag_to_team_stats, \
+    move_mouse_to_next_team_stats
 from .screenshots import take_team_screenshot
-from ..devices.screenshots import get_team_stats_photo, take_screenshot
+from ..devices.screenshots import get_team_stats_photo
+from ..data.excel import save_to_excel
+from ..utils.utils import remove_temp_images
 
 
 def get_window_rect(hwnd):
@@ -46,33 +50,93 @@ def screenshot_window_by_title(window_title, n_games, folder_path, tesseract_pat
         # Ensure the window is brought to the front
         bring_window_to_front(hwnd)
 
-        game = 0
         # Move the mouse to the top-left corner of the window
-        for game in range(0, min(5, n_games)):
+        for game in range(0, min(2, n_games)):
             print(f"Game {game}")
             move_mouse_to_game(game, left, top, right, bottom)
 
+            # Create the folder for the game
+            if not os.path.exists(f'{folder_path}/Stats Cropped/{game}'):
+                os.makedirs(f'{folder_path}/Stats Cropped/{game}')
+
+
             teams_path = take_team_screenshot(bottom, left, right, top, folder_path)
             print("Teams path: ", teams_path)
-            out_path = f'{folder_path}/Stats Cropped/Team Names-{game}.png'
+            out_path = f'{folder_path}/Stats Cropped/{game}/Team Names.png'
             crop_team_names(teams_path, out_path)
             team_names = get_team_names(out_path, tesseract_path)
-            team_names_out = team_names[0] + "-" + team_names[1]
             drag_to_team_stats(bottom, left, right, top)
 
-            for i in range(0, 1): #TODO increase to get all stats
-                path = get_team_stats_photo(bottom, left, right, top, folder_path, team_names_out, i)
+            # LOCAL TEAM
+            game_stats = {}
+            local_away = 0
+            for team in team_names:
+                game_stats[team] = {}
+                path = get_team_stats_photo(bottom, left, right, top, folder_path, team, 0, game)
                 time.sleep(1)
-                # TODO function to obtain the stats of players
-                preprocess_image_adding_rectangles(path)
-                exit(3)
+
+                preprocess_path = preprocess_image_adding_rectangles(path)
+
+                player_numbers = get_players_numbers(preprocess_path, tesseract_path, local_away)
+
+                players_names = get_players_names(preprocess_path, tesseract_path)
+
+                # Add the player numbers to the player names
+                print("Player numbers: ", player_numbers)
+                print("Players names: ", players_names)
+                print("Length of player numbers: ", len(player_numbers))
+                print("Length of players names: ", len(players_names))
+                for i in range(len(players_names)):
+                    players_names[i] = player_numbers[i] + ". " + players_names[i]
+
+                # Add players names to the dictionary
+                for player in players_names:
+                    game_stats[team][player] = {}
+
+                # Get the stats of the team
+                stats = get_team_stats(preprocess_path, tesseract_path)
+                try:
+                    stats = filter_stats(stats)
+                except ValueError as e:
+                    print("Error filtering stats: ", e)
+                    exit(-1)
 
 
+                # Add stats to the dictionary, first player corresponds to the first element of stats
+                j=0
+                print("Game stats:", game_stats)
+                print("Stats: ", stats)
+                for player in players_names:
+                    game_stats[team][player] = stats[j]
+                    j+=1
+
+                print("Game stats:", game_stats)
+
+                # TODO get more stats of the same team
+
+
+                # Go to the next team stats
+                local_away = 1
+                move_mouse_to_next_team_stats(bottom, left, right, top)
+
+
+            excel_name = f"{folder_path}/Results/{team_names[0]} vs {team_names[1]}.xlsx"
+            save_to_excel(game_stats, excel_name)
 
             # Go back to the team window
             click_back_button(bottom, left, right, top)
 
+            # Remove all images from the folder starting with 'temp'
+            remove_temp_images(folder_path)
 
+            # Rename the folder in f'{folder_path}/Stats Cropped/{game}/ to the name of the game
+            if not os.path.exists(f'{folder_path}/Stats Cropped/{team_names[0]} vs {team_names[1]}'):
+                os.rename(f'{folder_path}/Stats Cropped/{game}', f'{folder_path}/Stats Cropped/{team_names[0]} vs {team_names[1]}')
+
+
+        #TODO drag to the next game
+
+        """
         while game < n_games:
             print(f"Player {game}")
             slide_next_player(bottom, left, right, top)
@@ -82,10 +146,12 @@ def screenshot_window_by_title(window_title, n_games, folder_path, tesseract_pat
             # Go back to the team window
             click_back_button(bottom, left, right, top)
             game+=1
+        
 
         point_last_player(bottom, left, right, top)
-
+        """
 
     else:
-            print(f"Window with title '{window_title}' not found.")
+        print(f"Window with title '{window_title}' not found.")
+
 

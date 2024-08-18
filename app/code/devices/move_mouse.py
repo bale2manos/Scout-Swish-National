@@ -4,10 +4,13 @@ import pyautogui
 
 
 def move_mouse_to_game(n, left, top, right, bottom):
-    player_offset = n * (bottom - top) // 9 #TODO find offset
+    game_offset = n * (2 * (bottom - top) // 10)
 
-    # Move the mouse to the middle of the window
-    pyautogui.moveTo(left + (right - left) // 6, top + (bottom - top) // 2 + player_offset)
+    # Move the mouse to the 50% of the windows height and at 50% of the width
+    x_position = left + (right - left) // 2
+    y_position = top + 6 * (bottom - top) // 10 + game_offset
+
+    pyautogui.moveTo(x_position, y_position)
     time.sleep(2)
 
     # Click the mouse
@@ -68,3 +71,11 @@ def drag_to_next_stats(bottom, left, right, top):
 
     # Drag the mouse to the left extreme, in the same y position
     pyautogui.dragTo(left, top + (bottom - top) // 2, 1, button='left')
+
+def move_mouse_to_next_team_stats(bottom, left, right, top):
+    # Move the mouse to 20% height of the window, in the middle of the width
+    pyautogui.moveTo(left + (right - left) // 2, top + (bottom - top) // 5)
+    time.sleep(2)
+
+    # Click the mouse
+    pyautogui.click()

@@ -118,3 +118,81 @@ def crop_team_names(image_path, output_path):
         #os.remove(image_path)
 
     print(f"Cropped image saved to {output_path}")
+
+def crop_players_names(image_path):
+    # Open the image file
+    # Save the image at the same folder but with different name
+    output_path = image_path.replace(".png", "-names.png")
+
+    with Image.open(image_path) as img:
+        # Get the dimensions of the image
+        width, height = img.size
+
+        # I would like to the first 10% of the width, full height
+        left = 10 * width // 100
+        right = 40 * width // 100
+        top = height // 3
+        bottom = height
+
+        # Define the box to crop (left, upper, right, lower)
+        box = (left, top, right, bottom)
+
+        # Crop the image
+        cropped_img = img.crop(box)
+
+        # Save the cropped image
+        cropped_img.save(output_path)
+
+    return output_path
+
+def crop_stats(image_path):
+    # Open the image file
+    # Save the image at the same folder but with different name
+    output_path = image_path.replace(".png", "-stats.png")
+
+    with Image.open(image_path) as img:
+        # Get the dimensions of the image
+        width, height = img.size
+
+        # I would like to the first 10% of the width, full height
+        left = 38 * width // 100
+        right = 90 * width // 100
+        top = height // 3
+        bottom = height
+
+        # Define the box to crop (left, upper, right, lower)
+        box = (left, top, right, bottom)
+
+        # Crop the image
+        cropped_img = img.crop(box)
+
+        # Save the cropped image
+        cropped_img.save(output_path)
+
+    return output_path
+
+def crop_player_numbers(image_path):
+    # Open the image file
+    # Save the image at the same folder but with different name
+    output_path = image_path.replace(".png", "-numbers.png")
+
+    with Image.open(image_path) as img:
+        # Get the dimensions of the image
+        width, height = img.size
+
+        # I would like to the first 10% of the width, full height
+        left = 2 * width // 100
+        right = 10 * width // 100
+        top = 38 * height // 100
+        bottom = 995 * height // 1000
+
+        # Define the box to crop (left, upper, right, lower)
+        box = (left, top, right, bottom)
+
+        # Crop the image
+        cropped_img = img.crop(box)
+
+        # Save the cropped image
+        cropped_img.save(output_path)
+
+    return output_path

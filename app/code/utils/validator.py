@@ -1,3 +1,6 @@
+import re
+
+
 def check_over_50_over_under(lines):
     if len(lines) > 7 and float(lines[7]) > 50:
         # If number is over 100, add a decimal point after the second character, if  not add it after the first character
@@ -112,3 +115,126 @@ def check_data(lines):
     check_over_5_PF(lines)
     check_over_50_over_under(lines)
     double_check_points(lines)
+
+
+def filter_stats(stats):
+    # Remove from every player the fourth element
+    for stat in stats:
+        if len(stat) < 5:
+            if len(stat[0]) != 5:
+                raise ValueError("Minutes are wrong")    # Minutes should be 5 characters long XX:XX
+            if len(stat[1]) > 2:                         # Can't score more than 99 points
+                print("Stat error: ", stat[1])
+                if check_points(stat) is None:
+                    raise ValueError("Points are wrong")
+                print("Points fixed: ", stat)
+            try:
+                if not is_valid_scored_attempted(stat[2]):
+                    # Check if 100% is inside the string.
+                    print("Free throws has an error: ", stat[2])
+                    if '100%' in stat[2]:
+                        index = stat[2].index('100%')
+                        stat.insert(3, '100%')
+                        if len(stat[2][index + 4:]) > 0:
+                            stat.insert(4, stat[2][index + 4:])
+                        stat[2] = stat[2][:index]
+                        print("Stat fixed: ", stat[2])
+                    elif '%' in stat[2]:
+                        index = stat[2].index('%')
+                        stat.insert(3, stat[2][index - 2:])
+                        if len(stat[2][:index - 2]) > 0:
+                            stat.insert(4, stat[2][:index - 2])
+                        stat[2] = stat[2][:index]
+                        print("Stat fixed: ", stat[2])
+                    else:
+                        print("Free throws unsolved error: ", stat[2])
+                        raise ValueError("Free throws are wrong")
+            except ValueError as e:
+                print("Error: ", e)
+                print("Stat: ", stat)
+                raise ValueError("Free throws are wrong")
+
+            try:
+                if not is_valid_percentage(stat[3]):
+                    print("Free throws % has an error: ", stat[3])
+                    if '%' in stat[3]:
+                        index = stat[3].index('%')
+                        stat.insert(4, stat[3][index + 1:])
+                        stat[3] = stat[3][:index + 1]
+                        print("Stat fixed: ", stat[3])
+                    else:
+                        raise ValueError("Free throws % is wrong")
+            except Exception as e:
+                print("Error: ", e)
+                print("Stat: ", stat)
+                raise ValueError("Free throws % is wrong")
+
+            try:
+                if not is_valid_scored_attempted(stat[4]):
+                    raise ValueError("2FG are wrong")
+            except ValueError as e:
+                print("Error: ", e)
+                print("Stat: ", stat)
+                raise ValueError("2FG are wrong")
+
+
+    for stat in stats:
+        stat.pop(3)
+
+    return stats
+
+
+
+def is_valid_scored_attempted(field_goal: str) -> bool:
+    # IMPORTANT: Checks up to 30 shots, if you need more, change the pattern
+    pattern = r'^(?:[0-9]|[1-4][0-9]|40)\/(?:[0-9]|[1-4][0-9]|40)$'
+    if re.match(pattern, field_goal):
+        scored, attempted = map(int, field_goal.split('/'))
+        return scored <= attempted
+
+    return False
+
+
+
+def is_valid_percentage(percentage: str) -> bool:
+    # IMPORTANT: Checks up to 100% and 1-100% (no decimals)
+    pattern = r'^([1-9][0-9]?|100)%$'
+    return bool(re.match(pattern, percentage))
+
+
+def check_points(stat) :
+    """
+    Parse a stat string in the format "2211/1479%" and assigns values to stat array.
+
+    :param stat: List with stat values.
+    :return: Dictionary with stat values or None if invalid input.
+    """
+    # Regular expression to match the format "2211/1479%"
+    stat_string = stat[1]
+    pattern = r'^(\d{1,2})(\d{1,2})/(\d{1,2})(\d{1,2})%$'
+    match = re.match(pattern, stat_string)
+
+    if not match:
+        print("Invalid format")
+        return None
+
+    # Extract components
+    stat1 = int(match.group(1))
+    scored = int(match.group(2))
+    attempted = int(match.group(3))
+    stat3 = int(match.group(4))
+
+    # Validate components
+    if scored > attempted:
+        print("Invalid stats: scored is greater than attempted")
+        return None
+
+    if scored > 30 or attempted > 30:
+        print("Invalid stats: scored or attempted is greater than 30")
+        return None
+
+    # Assign values to the stat dictionary
+    stat[1] = stat1
+    stat.insert(2, f"{scored}/{attempted}")
+    stat.insert(3, f"{stat3}%")
+    return stat

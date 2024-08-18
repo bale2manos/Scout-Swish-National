@@ -3,14 +3,14 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 from tkinter import ttk
 
-from code.media.process_image import process_images, get_team_stats
+from code.media.process_image import process_images
 from code.media.image_to_text import get_player_name
 from code.media.cropping import crop_image_to_second_third_row, crop_image_to_second_fifth_row
 from code.devices.windows import screenshot_window_by_title
 
 def start_process():
     folder_path = 'F:/PyCharm/scout-swish/Scout-Swish-National/teams/Villa'
-    n_players = 2
+    n_games = 2
     window_title = "BlueStacks App Player"
     tesseract_path = "F:/Programas/Tesseract-OCR/tesseract.exe"
 
@@ -26,8 +26,7 @@ def start_process():
         os.makedirs(f'{folder_path}/Results')
 
     # Take screenshot
-    screenshot_window_by_title(window_title, n_players, folder_path, tesseract_path)
-
+    screenshot_window_by_title(window_title, n_games, folder_path, tesseract_path)
 
 
     # Process each image in the folder
@@ -41,15 +40,6 @@ def start_process():
             except Exception as e:
                 print(f"Error processing file {filename}: {e}")
 
-    # Process general stats and save
-    crop_image_to_second_fifth_row(f'{folder_path}/GENERAL_STATS_temp.png', f'{folder_path}/Stats Cropped/GENERAL_STATS.png')
-    team_stats = get_team_stats(f'{folder_path}/Stats Cropped/GENERAL_STATS.png')
-
-    with open(f'{folder_path}/Results/Team Stats.txt', 'w') as f:
-        for key, value in team_stats.items():
-            f.write(f"{key}: {value}\n")
-
-    process_images(f'{folder_path}/Stats Cropped', f'{folder_path}/Results/Players Stats.xlsx')
 
     messagebox.showinfo("Process Completed", "The process has been completed successfully.")
 

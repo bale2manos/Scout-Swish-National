@@ -1,6 +1,7 @@
 import os
 
 import cv2
+import numpy as np
 
 from ..utils.utils import create_temp_copy
 
@@ -8,8 +9,7 @@ from ..utils.utils import create_temp_copy
 def preprocess_image_adding_rectangles(image_path):
     temp_path = create_temp_copy(image_path)
 
-    # Read the image in grayscale from the new path
-    image = cv2.imread(temp_path, cv2.IMREAD_GRAYSCALE)
+    image = read_image(temp_path)
 
     # Check if the image was loaded properly
     if image is None:
@@ -36,17 +36,19 @@ def preprocess_image_adding_rectangles(image_path):
     inverted_image = cv2.bitwise_not(image)
 
     # Resize for better OCR accuracy
-    scaled_image = cv2.resize(inverted_image, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+    scaled_image = resize_image(inverted_image)
 
     # Save the image
     cv2.imwrite(temp_path, scaled_image)
     print(f"Preprocessed image saved to {temp_path}")
 
-    # Optionally remove the temporary file if you no longer need it
-    #os.remove(temp_path)
+    return temp_path
 
 
-    return scaled_image
+def read_image(temp_path):
+    # Read the image in grayscale from the new path
+    image = cv2.imread(temp_path, cv2.IMREAD_GRAYSCALE)
+    return image
 
 
 def preprocess_image(image_path):
@@ -57,7 +59,36 @@ def preprocess_image(image_path):
         raise FileNotFoundError(
             f"Could not read image from {image_path}. Please ensure the file exists and is accessible.")
     # Invert colors if needed
-    inverted_image = cv2.bitwise_not(image)
-    # Resize for better OCR accuracy
-    scaled_image = cv2.resize(inverted_image, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+    #inverted_image = cv2.bitwise_not(image)
+    scaled_image = resize_image(image)
+
+    # Save the image
+    cv2.imwrite("./numbers_image.png", scaled_image)
     return scaled_image
+
+
+def resize_image(image):
+    # Resize for better OCR accuracy
+    scaled_image = cv2.resize(image, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+    return scaled_image
+
+def save_image(image, output_path):
+    cv2.imwrite(output_path, image)
+    print(f"Image saved to {output_path}")
+
+def invert_colors(image):
+    return cv2.bitwise_not(image)
+
+def apply_threshold(image):
+    _, thresh_image = cv2.threshold(image, 150, 255, cv2.THRESH_BINARY)
+    return thresh_image
+
+def enhance_image(image):
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, 1))
+    processed_image = cv2.dilate(image, kernel, iterations=1)
+    processed_image = cv2.erode(processed_image, kernel, iterations=1)
+    return processed_image
+
+def sharpen_image(image):
+    kernel = np.array([[0, -1, 0], [-1, 5,-1], [0, -1, 0]])  # sharpening kernel
+    return cv2.filter2D(image, -1, kernel)
