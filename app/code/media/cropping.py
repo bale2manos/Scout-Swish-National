@@ -99,7 +99,7 @@ def crop_team_names(image_path, output_path):
         left = 12 * width // 100
         right = 55 * width // 100
         top = 7 * height // 20
-        bottom = 5 * height // 10
+        bottom = 53 * height // 100
 
         # Define the box to crop (left, upper, right, lower)
         box = (left, top, right, bottom)
@@ -131,7 +131,7 @@ def crop_players_names(image_path):
         # I would like to the first 10% of the width, full height
         left = 10 * width // 100
         right = 40 * width // 100
-        top = height // 3
+        top = 3 * height // 10
         bottom = height
 
         # Define the box to crop (left, upper, right, lower)
@@ -157,7 +157,7 @@ def crop_stats(image_path):
         # I would like to the first 10% of the width, full height
         left = 38 * width // 100
         right = 90 * width // 100
-        top = height // 3
+        top = 27 * height // 100
         bottom = height
 
         # Define the box to crop (left, upper, right, lower)

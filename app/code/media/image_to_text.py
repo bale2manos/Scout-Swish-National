@@ -72,12 +72,9 @@ def get_team_names(image_path, tesseract_cmd_path):
     #os.remove(image_path)
 
     teams = text.split('\n')
-    # Remove empty strings
-    teams = list(filter(None, teams))
-
-    # Maximum of 2 teams
-    if len(teams) > 2:
-        teams = teams[:2]
+    print("Teams after split: ", teams)
+    teams = separate_teams(teams)
+    print("Teams after separation: ", teams)
 
     return teams
 
@@ -161,7 +158,7 @@ def get_players_numbers(image_path, tesseract_cmd_path, local_away):
     else:
         team_color = (166, 166, 166)
         tolerance_team = 70
-        tolerance_color_replace = 60
+        tolerance_color_replace = 30
 
     pytesseract.pytesseract.tesseract_cmd = tesseract_cmd_path
 
@@ -187,6 +184,11 @@ def get_players_numbers(image_path, tesseract_cmd_path, local_away):
     # Change the image gray to black
     final_path = change_color(bucket_path, team_color, (0,0,0), tolerance=tolerance_color_replace)
 
+    # Blur a bit the image
+    final_image = cv2.imread(final_path)
+    blurred_image = cv2.GaussianBlur(final_image, (5, 5), 0)
+    cv2.imwrite(final_path, blurred_image)
+
     # Configure Tesseract to only recognize digits (0-9)
     custom_config = r'--psm 6 -c tessedit_char_whitelist=0123456789'
 
@@ -211,8 +213,24 @@ def get_players_numbers(image_path, tesseract_cmd_path, local_away):
     return extracted_text
 
 
+def separate_teams(team_list):
+    separated_teams = []
+    current_team = []
 
+    for team in team_list:
+        if team == '':
+            if current_team:
+                separated_teams.append(' '.join(current_team))
+                current_team = []
+        else:
+            current_team.append(team)
 
+    if current_team:
+        separated_teams.append(' '.join(current_team))
 
+    for team in separated_teams:
+        if 'Cb. ' in team:
+            team.replace('Cb. ', 'CB ')
 
+    return separated_teams
 

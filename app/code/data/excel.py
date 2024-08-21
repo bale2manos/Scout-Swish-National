@@ -12,6 +12,11 @@ def save_to_excel(data, excel_filename):
     with pd.ExcelWriter(excel_filename, engine='xlsxwriter') as writer:
         # Iterate over each team in the dictionary
         for team, players in data.items():
+            # Truncate team name if it exceeds 31 characters
+            if len(team) > 31:
+                truncated_team_name = team[:31]
+            else:
+                truncated_team_name = team
             # Prepare the data for the DataFrame
             df_data = []
             for player, stats in players.items():
@@ -24,7 +29,7 @@ def save_to_excel(data, excel_filename):
             df['PTS'] = pd.to_numeric(df['PTS'], errors='coerce')
 
             # Write the DataFrame to a new sheet with the team name
-            df.to_excel(writer, sheet_name=team, index=False)
+            df.to_excel(writer, sheet_name=truncated_team_name, index=False)
 
 
 

@@ -1,3 +1,4 @@
+import os
 import re
 
 
@@ -117,18 +118,39 @@ def check_data(lines):
     double_check_points(lines)
 
 
-def filter_stats(stats):
+def filter_first_stats(stats):
     # Remove from every player the fourth element
     for stat in stats:
-        if len(stat) < 5:
-            if len(stat[0]) != 5:
-                raise ValueError("Minutes are wrong")    # Minutes should be 5 characters long XX:XX
-            if len(stat[1]) > 2:                         # Can't score more than 99 points
-                print("Stat error: ", stat[1])
-                if check_points(stat) is None:
-                    raise ValueError("Points are wrong")
-                print("Points fixed: ", stat)
-            try:
+        try:
+            if len(stat) < 5:
+                if len(stat[0]) != 5:
+                    # Insert the characters after XX:XX to the next element
+                    if ':' not in stat[0] and len(stat[0]) >= 4:
+                        print("Stat error: ", stat[0])
+                        stat.insert(1, stat[0][4:])
+                        # Add a : after the second character
+                        stat[0] = stat[0][:2] + ':' + stat[0][2:4]
+                        print("Stat fixed: ", stat)
+                    elif len(stat[0]) > 5:
+                        print("Stat error: ", stat[0])
+                        stat.insert(1, stat[0][5:])
+                        stat[0] = stat[0][:5]
+                        print("Stat fixed: ", stat)
+                    else:
+                        print("Stat error can't fix: ", stat[0])
+                        raise ValueError("Minutes error")
+                if len(stat[1]) > 2:                         # Can't score more than 99 points
+                    print("Stat error: ", stat[1])
+                    if check_points(stat) is None:
+                        # Get last two characters and remove the rest
+                        if '/' not in stat[1][-2:] and '%' not in stat[1][-2:] and '-' not in stat[1][-2:]:
+                            stat[1] = stat[1][-2:]
+                            print("Stat fixed: ", stat)
+                        else:
+                            print("Stat error can't fix: ", stat[1])
+                            raise ValueError("Points error")
+
+                    print("Points fixed: ", stat)
                 if not is_valid_scored_attempted(stat[2]):
                     # Check if 100% is inside the string.
                     print("Free throws has an error: ", stat[2])
@@ -139,6 +161,13 @@ def filter_stats(stats):
                             stat.insert(4, stat[2][index + 4:])
                         stat[2] = stat[2][:index]
                         print("Stat fixed: ", stat[2])
+                    elif '%' in stat[2] and stat[2][stat[2].index('%') - 3] == '/':
+                        index = stat[2].index('%')
+                        stat.insert(3, stat[2][index - 1:])
+                        if len(stat[2][:index - 1]) > 0:
+                            stat.insert(4, stat[2][:index - 1])
+                        stat[2] = stat[2][:index-1]
+                        print("Stat fixed: ", stat)
                     elif '%' in stat[2]:
                         index = stat[2].index('%')
                         stat.insert(3, stat[2][index - 2:])
@@ -149,13 +178,7 @@ def filter_stats(stats):
                     else:
                         print("Free throws unsolved error: ", stat[2])
                         raise ValueError("Free throws are wrong")
-            except ValueError as e:
-                print("Error: ", e)
-                print("Stat: ", stat)
-                raise ValueError("Free throws are wrong")
-
-            try:
-                if not is_valid_percentage(stat[3]):
+                if not is_valid_percentage(stat[3]) and stat[3]!="0%":
                     print("Free throws % has an error: ", stat[3])
                     if '%' in stat[3]:
                         index = stat[3].index('%')
@@ -163,23 +186,53 @@ def filter_stats(stats):
                         stat[3] = stat[3][:index + 1]
                         print("Stat fixed: ", stat[3])
                     else:
-                        raise ValueError("Free throws % is wrong")
-            except Exception as e:
-                print("Error: ", e)
-                print("Stat: ", stat)
-                raise ValueError("Free throws % is wrong")
-
-            try:
+                        print("Free throws % unsolved error: ", stat[3])
+                        raise ValueError("Free throws % are wrong")
                 if not is_valid_scored_attempted(stat[4]):
+                    print("2FG has an unsolved error: ", stat[4])
                     raise ValueError("2FG are wrong")
-            except ValueError as e:
-                print("Error: ", e)
-                print("Stat: ", stat)
-                raise ValueError("2FG are wrong")
+        except Exception as e:
+            print("Error filtering stats: ", e)
+            # If length of stat is less than 5, update it to 5
+            while len(stat) < 5:
+                stat.append('-')
+            print("Stat length fixed: ", stat)
+            # Continue to the next stat
+            
+            print("Stat fixed: ", stat)
+            continue
+
+    for i in range(len(stats)):
+        print("Stat pre pop: ", stats[i])
+        stats[i].pop(3)
+        print("Stat post pop: ", stats[i])
+        # If length of stat is bigger than 4, cut it to 4
+        if len(stats[i]) > 4:
+            stats[i] = stats[i][:4]
+            print("Stat cut: ", stats[i])
+
+        print("Stat before filtering: ", stats[i])
+        if len(stats[i][0]) != 5 or ':' not in stats[i][0]:
+            stats[i][0] = '-'
+
+        print("Stat after minutes filtering: ", stats[i])
+        if type(stats[i][1]) == str:
+            if len(stats[i][1]) > 2 or '/' in stats[i][1] or '%' in stats[i][1] or '-' in stats[i][1]:
+                stats[i][1] = '-'
+        elif float(stats[i][1]) > 50:
+            # Divide the number by 10
+            stats[i][1] = str(float(stats[i][1]) / 10)
 
 
-    for stat in stats:
-        stat.pop(3)
+        print("Stat after points filtering: ", stats[i])
+        if len(stats[i][2]) > 5 or len(stats[i][2]) < 3 or '/' not in stats[i][2] or '%' in stats[i][2]:
+            stats[i][2] = '-'
+
+        print("Stat after 2FG filtering: ", stats[i])
+        if len(stats[i][3]) > 5 or len(stats[i][3]) < 3 or '/' not in stats[i][3] or '%' in stats[i][3] or '-' in stats[i][3]:
+            stats[i][3] = '-'
+
+    print("\nStats after filtering: ", stats, "\n")
 
     return stats
 
@@ -238,3 +291,26 @@ def check_points(stat) :
     stat.insert(2, f"{scored}/{attempted}")
     stat.insert(3, f"{stat3}%")
     return stat
+
+def check_players_names(players_names):
+    current_path = os.path.dirname(os.path.abspath(__file__))
+    names_path = '../data/names.csv'
+    names_path = os.path.join(current_path, names_path)
+    with open(names_path, 'r') as file:
+        names = file.read().splitlines()
+        # Capitalize names
+        names = [name.title() for name in names]
+
+    for player_name in players_names:
+        player_name_list = player_name.split()
+        if len(player_name_list) < 3:
+            # Split the name in spaces
+            first_name = player_name_list[0]
+            print("First name: ", first_name)
+            # If first name not in names, remove player_name from players_names
+            if first_name not in names:
+                players_names.remove(player_name)
+                print("Removed: ", player_name)
+
+    return players_names
+
