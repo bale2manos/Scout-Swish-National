@@ -3,7 +3,7 @@ import os
 import cv2
 import numpy as np
 
-from ..utils.utils import create_temp_copy
+from code.utils.utils import create_temp_copy
 
 
 def preprocess_image_adding_rectangles(image_path):

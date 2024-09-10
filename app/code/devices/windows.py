@@ -5,15 +5,15 @@ import win32con
 import pygetwindow as gw  # Assuming you have pygetwindow installed
 import os
 
-from utils.validator import filter_first_stats, check_players_names
-from ..media.cropping import crop_team_names
-from ..media.preprocess_image import preprocess_image_adding_rectangles
-from ..media.image_to_text import get_team_names, get_players_names, get_team_stats, get_players_numbers
-from .move_mouse import move_mouse_to_game, click_back_button, drag_to_team_stats, \
+from code.utils.validator import filter_first_stats, check_players_names
+from code.media.cropping import crop_team_names
+from code.media.preprocess_image import preprocess_image_adding_rectangles
+from code.media.image_to_text import get_team_names, get_players_names, get_team_stats, get_players_numbers
+from code.devices.move_mouse import move_mouse_to_game, click_back_button, drag_to_team_stats, \
     move_mouse_to_next_team_stats, drag_to_next_game
-from .screenshots import take_team_screenshot
-from ..devices.screenshots import get_team_stats_photo
-from ..data.excel import save_to_excel
+from code.devices.screenshots import take_team_screenshot
+from code.devices.screenshots import get_team_stats_photo
+from code.data.excel import save_to_excel
 from ..utils.utils import remove_temp_images
 
 

@@ -1,7 +1,7 @@
 import os
 
-from ..utils.utils import clean_text_and_remove_excess
-from ..utils.validator import check_data
+from code.utils.utils import clean_text_and_remove_excess
+from code.utils.validator import check_data
 
 
 def extract_data_from_text(text, player_name):

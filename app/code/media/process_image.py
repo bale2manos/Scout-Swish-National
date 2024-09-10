@@ -1,9 +1,9 @@
 import os
 
-from ..data.excel import save_to_excel
-from ..data.text_to_data import extract_player_name, extract_data_from_text
-from ..media.image_to_text import extract_numbers
-from ..media.preprocess_image import preprocess_image_adding_rectangles, preprocess_image
+from code.data.excel import save_to_excel
+from code.data.text_to_data import extract_player_name, extract_data_from_text
+from code.media.image_to_text import extract_numbers
+from code.media.preprocess_image import preprocess_image_adding_rectangles, preprocess_image
 
 
 def process_images(folder_path, excel_path):

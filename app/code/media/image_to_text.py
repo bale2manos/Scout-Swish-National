@@ -4,11 +4,11 @@ from PIL import Image
 import pytesseract
 import os
 
-from utils.bucket import change_color
-from ..utils.bucket import bucket_fill
-from .preprocess_image import preprocess_image, read_image, resize_image, save_image, invert_colors, apply_threshold, \
+from code.utils.bucket import change_color
+from code.utils.bucket import bucket_fill
+from code.media.preprocess_image import preprocess_image, read_image, resize_image, save_image, invert_colors, apply_threshold, \
     enhance_image, sharpen_image
-from ..media.cropping import crop_image_to_top, crop_players_names, crop_stats, crop_player_numbers
+from code.media.cropping import crop_image_to_top, crop_players_names, crop_stats, crop_player_numbers
 from ..utils.utils import remove_initial_wrong_chars
 
 

@@ -1,8 +1,6 @@
 import pytesseract
 import pandas as pd
 
-from ..utils.utils import time_to_seconds
-
 # Path to Tesseract executable
 pytesseract.pytesseract.tesseract_cmd = r'F:\Programas\Tesseract-OCR\tesseract.exe'
 
